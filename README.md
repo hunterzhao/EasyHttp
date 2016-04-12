@@ -36,7 +36,9 @@
 
 ![浏览器提交用户的输入，并返回执行结果](https://github.com/hunterzhao/EasyHttp/blob/master/pic/2.png?raw=true)
 
-**水平有限献丑了,如果对您有帮助请给我点star哦 :)**
+##感谢：
+**谢谢您的查看，水平有限献丑了,如果对您有帮助请给我点star哦 :)**
+
 ##参考：
 1. [http 请求报文 与 响应报文][1]
 2. [GDB 调试多进程方法][2]
