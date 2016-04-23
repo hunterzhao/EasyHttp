@@ -126,7 +126,7 @@ void accept_request(int client){
          execute_cgi(client,path,method,query_string);
    }
    //close the connection to client   
-   close(client);
+   //close(client);
 }
 /*
  * infom the client that a request has made a mistake
@@ -164,6 +164,7 @@ void cat(int client ,FILE *resource)
      send(client,buf,strlen(buf),0);
      fgets(buf,sizeof(buf),resource);
    }
+   printf("send index.html\n");
 }
 
 /*
@@ -382,6 +383,7 @@ void header(int client,const char *filename)
    send(client,buf,strlen(buf),0);
    strcpy(buf,"\r\n");
    send(client,buf,strlen(buf),0);
+   printf("send head\n");
 }
 
 void server_file(int client,const char *filename)
@@ -402,6 +404,7 @@ void server_file(int client,const char *filename)
    {
       header(client,filename);
       cat(client,resource);
+      
    }
    fclose(resource);
 }
@@ -476,6 +479,7 @@ int main(void)
      // accept_request(client_sock);
      if(pthread_create(&newthread,NULL,accept_request,client_sock)!=0)
          perror("pthread_create");
+     //close(client_sock);
   }
   
   close(server_sock);

@@ -44,6 +44,10 @@
 2. [GDB 调试多进程方法][2]
 3. [python cgi编写方法][3]
 
+##后续：
+1. 支持图片
+2. https
+3. 大量的并发请求
 
 [1]: http://network.chinabyte.com/401/13238901.shtml
 [2]: http://blog.csdn.net/pbymw8iwm/article/details/7876797
