@@ -30,6 +30,7 @@ void not_found(int);
 void server_file(int ,const char*);
 int startup(u_short *);
 void unimplemented(int);
+void execute_cgi(int ,const char *,const char *,const char *);
 
 /*
  * * receive a call to accept
@@ -44,7 +45,7 @@ void accept_request(int client){
    char path[512];
    size_t i,j;
    struct stat st;
-   int cgi = 0;  
+   int cgi = 0;
    char *query_string=NULL;
 
  //read from the socket return the len of content
@@ -57,7 +58,7 @@ void accept_request(int client){
       i++;j++;
    }
    method[i]='\0';
-   
+
    //neither post nor get return unimplementd
    if(strcasecmp(method,"GET") && strcasecmp(method,"POST"))
    {
@@ -69,7 +70,7 @@ void accept_request(int client){
    {
      cgi=1;
    }
-   
+
    i=0;
    //skip the space
    while(ISspace(buf[j]) && j<sizeof(buf))
@@ -77,18 +78,18 @@ void accept_request(int client){
 
    // get url
    while(!ISspace(buf[j]) && i<sizeof(url)-1 && j<sizeof(buf))
-   { 
+   {
      url[i]= buf[j];
      i++;j++;
    }
    url[i]='\0';
-   
+
    if(strcasecmp(method,"GET")==0)
-   { 
+   {
       query_string = url;
       while((*query_string !='?') &&( *query_string!='\0' ))
          query_string++;
-      
+
       //the query param follow the ?
       if(*query_string =='?')
       {
@@ -97,12 +98,12 @@ void accept_request(int client){
          query_string++;
       }
    }
-   
+
    // if method ==get no query string in url now
    sprintf(path,"htdocs%s",url);
    if(path[strlen(path)-1]=='/')
      strcat(path,"index.html");
-   
+
    //read file by filename save in buf
    if(stat(path,&st)==-1){
       //丢弃所有head文件
@@ -125,7 +126,7 @@ void accept_request(int client){
       else
          execute_cgi(client,path,method,query_string);
    }
-   //close the connection to client   
+   //close the connection to client
    //close(client);
 }
 /*
@@ -134,14 +135,14 @@ void accept_request(int client){
 void bad_request(int client)
 {
    char buf[1024];
-   
+
    sprintf(buf,"HTTP/1.0 400 BAD REQUEST\r\n");
    send(client,buf,strlen(buf),0);
    sprintf(buf,"Content-type:text/html\r\n");
    send(client,buf,strlen(buf),0);
-   sprintf(buf,"\r\n"); 
+   sprintf(buf,"\r\n");
    send(client,buf,strlen(buf),0);
-   sprintf(buf,"<p>your browser send a bad request, ");   
+   sprintf(buf,"<p>your browser send a bad request, ");
    send(client,buf,strlen(buf),0);
    sprintf(buf,"such as a POST without a content-Length.\r\n");
    send(client,buf,strlen(buf),0);
@@ -154,9 +155,9 @@ void bad_request(int client)
  */
 
 void cat(int client ,FILE *resource)
-{   
+{
    char buf[1024];
-   
+
    //read the content of file into socket
    fgets(buf,sizeof(buf),resource);
    while(!feof(resource))
@@ -172,9 +173,9 @@ void cat(int client ,FILE *resource)
  */
 
 void cannot_execute(int client)
-{ 
+{
    char buf[1024];
-   
+
    sprintf(buf,"HTTP/1.0 500 Internal Server Error\r\n");
    send(client,buf,strlen(buf),0);
    sprintf(buf,"Content-type: text/html\r\n");
@@ -212,7 +213,7 @@ void execute_cgi(int client,const char *path,const char *method,const char *quer
     char c;
     int numchars=1;
     int content_length=-1;
-    
+
     buf[0]='A';buf[1]='\0';
     if(strcasecmp(method,"GET")==0)
         //将所有的http header 读取并丢弃
@@ -239,8 +240,8 @@ void execute_cgi(int client,const char *path,const char *method,const char *quer
           return;
        }
     }
-    
-    //correct 
+
+    //correct
     sprintf(buf,"HTTP/1.0 200 OK\r\n");//已经清空了buf的内容
     send(client,buf,strlen(buf),0);
     // sprintf(buf,"Content-type: text/html\r\n");
@@ -256,17 +257,17 @@ void execute_cgi(int client,const char *path,const char *method,const char *quer
        cannot_execute(client);
        return;
     }
-    
+
     if(pipe(cgi_input)<0){
        cannot_execute(client);
        return;
     }
-    
+
     if((pid=fork())<0){
       cannot_execute(client);
       return;
     }
-   
+
     if(pid==0) //子进程
     {
       char meth_env[255];
@@ -285,7 +286,7 @@ void execute_cgi(int client,const char *path,const char *method,const char *quer
       }
       else{ //post
          sprintf(length_env,"CONTENT_LENGTH=%d",content_length);
-      } 
+      }
       if(execl(path,path,NULL)<0)
       {
          printf("execl error\n");
@@ -365,7 +366,7 @@ int get_line(int sock, char *buf, int size)
    c = '\n';
  }
  buf[i] = '\0';
- 
+
  return(i);
 }
 
@@ -391,7 +392,7 @@ void server_file(int client,const char *filename)
    FILE *resource =NULL;
    int numchars= 1;
    char buf[1024];
-   
+
    //丢弃header
    buf[0]='A'; buf[1]='\0';
    while((numchars >0) && strcmp("\n", buf) )
@@ -404,7 +405,7 @@ void server_file(int client,const char *filename)
    {
       header(client,filename);
       cat(client,resource);
-      
+
    }
    fclose(resource);
 }
@@ -423,7 +424,7 @@ int startup(u_short *port)
   name.sin_addr.s_addr=htonl(INADDR_ANY);
   if(bind(httpd,(struct sockaddr *)&name,sizeof(name))<0)
       error_die("bind");
-  
+
   if(*port ==0 )
   {
      int namelen=sizeof(name);
@@ -431,7 +432,7 @@ int startup(u_short *port)
         error_die("getsockname");
      *port=ntohs(name.sin_port);
   }
-  
+
   if(listen(httpd,5)<0)
      error_die("listen");
   return(httpd);
@@ -442,7 +443,7 @@ void unimplemented(int client)
   char buf[1024];
   sprintf(buf,"HTTP/1.0 501 Method Not Implemented\r\n");
   send(client,buf,strlen(buf),0);
-  
+
   sprintf(buf,SERVER_STRING);
   send(client,buf,strlen(buf),0);
   sprintf(buf,"Content-Type: Text/html\r\n");
@@ -467,7 +468,7 @@ int main(void)
   struct sockaddr_in client_name;
   int client_name_len=sizeof(client_name);
   pthread_t newthread;
-  
+
   server_sock =startup(&port);
   printf("http running on port %d\n",port);
 
@@ -481,7 +482,7 @@ int main(void)
          perror("pthread_create");
      //close(client_sock);
   }
-  
+
   close(server_sock);
   return(0);
 }
